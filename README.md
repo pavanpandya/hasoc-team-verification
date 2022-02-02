@@ -1,0 +1,1 @@
+# hasoc-team-verification

@@ -1,0 +1,22 @@
+/* Google Font CDN Link */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins" , sans-serif;
+}
+:root{
+    --black-color:#11101d;
+    --white-color:#fff;
+    --sky-color:#E4E9F7;
+    --light-black:#1d1b31;
+}
+#add_user_btn{
+    border: none;
+    color: var(--white-color);
+    background: #2a283f;
+}
+#add_user_btn:hover{
+    background: var(--black-color);
+}

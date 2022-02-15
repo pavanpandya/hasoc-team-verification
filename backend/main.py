@@ -1,17 +1,17 @@
-from flask import Flask, request, Response, json, jsonify, make_response
-from datetime import datetime, timedelta
-from functools import wraps
+from flask import Flask, current_app, request, jsonify, Response, json, make_response
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS, cross_origin
-import jwt
+from functools import wraps
 import pymongo
+import jwt
+import datetime
 import os
 
 app = Flask(__name__)
 
 # Instantiate the object of bcrypt
 bcrypt = Bcrypt(app)
-app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+app.config['SECRET_KEY'] = '004f2af45d3a4e161a7dd2d17fdae47f'
 app.config['CORS_HEADERS'] = 'application/json'
 
 # Cross-Origin Resource Sharing
@@ -67,9 +67,6 @@ except Exception as ex:
     print('\n\n*********************************\n\n')
 
 
-"""
-Login
-"""
 @app.route('/login', methods=['GET','POST'])
 @cross_origin(origin='*',headers=['Content- Type','Authorization'])
 def login():
@@ -78,30 +75,19 @@ def login():
             form_data = request.get_json()
             name = form_data['name']
             password = form_data['password']
-            isAdmin = "1"
             if(name!='' and password!=''):
-                data = list(db.users.find({'_id':name}))
+                data = list(db.users.find({'name':name}))
                 if(len(data)==0):
                     return Response(status=404, response=json.dumps({'message':'user does not exist'}), mimetype='application/json')
                 else:
                     data = data[0]
                     db_password_hash = data['password_hash']
                     if(bcrypt.check_password_hash(db_password_hash, password)):
-                        if(data['adminAccess']):
-                            token = jwt.encode({
-                                'uname': name,
-                                # 'isadmin':data['adminAccess'],
-                                'exp' : datetime.utcnow() + timedelta(hours = 4)}, app.config['SECRET_KEY']) 
-                            return make_response(jsonify({'token' : token.decode('UTF-8')}), 201)
-                        else:
-                            if(isAdmin):
-                                return Response(status=401, response=json.dumps({'message':'invalid user request'}), mimetype='application/json')
-                            else:
-                                token = jwt.encode({
-                                    'uname': name,
-                                    # 'isadmin':data['adminAccess'],
-                                    'exp' : datetime.utcnow() + timedelta(hours = 4)}, app.config['SECRET_KEY']) 
-                                return make_response(jsonify({'token' : token.decode('UTF-8')}), 201)
+                        token = jwt.encode({'name' : name, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'], "HS256")
+                        print(token)
+                        print(type(token))
+                        # return make_response(jsonify({'token' : token.decode('UTF-8')}), 201)
+                        return make_response(jsonify({'token' : token}), 201)
                     else:
                         return Response(status=402, response=json.dumps({'message':'Invalid password'}), mimetype='application/json')
             else:
@@ -114,19 +100,10 @@ def login():
             response=json.dumps({'message': Ex}), status=500, mimetype="application/json")
 
 
-"""
-Change Password
-"""
-def change_password():
-    pass
-
 @app.route('/admin/user', methods=['GET','POST'])
 @cross_origin(origin='*',headers=['Content- Type','Authorization'])
-# @admin_token_required
-def user():
-    """
-    creates a new user or display the count of vertification done by a particular user
-    """
+@admin_token_required
+def create_or_display_user():
     try:
         if request.method == 'POST':
             data = request.get_json()
@@ -135,20 +112,38 @@ def user():
             password = data['password']
             password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
             isadmin = data['isadmin']
-            d = db.users.insert_one({'_id':name,'email':email,'password_hash':password_hash,"adminAccess":isadmin})
+            d = db.users.insert_one({'name':name,'email':email,'password_hash':password_hash,"adminAccess":isadmin})
             return Response(response=json.dumps({'message': 'User created successfully'}), status=200, mimetype="application/json")
         else:
-            user = dict()
-            u = list(db.users.find({},{'email':1,'adminAccess':1}))
-            for user in u:
-                name = user['_id']
-                verify_count = db.verified_teams.count_documents({'verified_by':name})
-                user['verified'] = verify_count
-            user['users'] = u #doubt
-            return user
+            user = {}
+            u = list(db.users.find({'adminAccess':1}, {'_id': 0}))
+            for usr in u:
+                name = usr['name']
+                verify_count = db.teams.count_documents({'verified_by':name})
+                if name in user:
+                    user[name].append(verify_count)
+                else:
+                    user[name] = verify_count
+                # print(usr)
+                # db.users.update({ "name": name }, {'$set': {"no_of_files_verified" : verify_count}})
+            return make_response(jsonify({'Count per User' : user}), 200)
     except pymongo.errors.DuplicateKeyError:
         return Response(
             response=json.dumps({'message':'duplicate username'}),status=403,mimetype='application/json')
+    except Exception as Ex:
+        print('\n\n*********************************')
+        print(Ex)
+        print('*********************************\n\n')
+        return Response(response=json.dumps({'message': Ex}), status=500, mimetype="application/json")
+
+@app.route('/test', methods=['GET','POST'])
+@token_required
+def test():
+    try:
+        if request.method == 'POST':
+            return Response(response=json.dumps({'message': 'Successfully'}), status=200, mimetype="application/json")
+        else:
+            return Response(response=json.dumps({'message': 'Unsuccessfully'}), status=200, mimetype="application/json")
     except Exception as Ex:
         print('\n\n*********************************')
         print(Ex)
@@ -164,74 +159,96 @@ pass
 
 
 """
-Add approved file to database
-"""
-pass
-
-
-"""
 Count the total vertification of files
 """
-pass
-
-
-"""
-Count the total vertification of files by an Individual
-"""
-# def get_dashboard_statatics():
-#     try:
-#         data = list(db.teams.find())
-#         userwise_count = dict()
-#         total_team_verified = 0
-#         storywise_tweets_count = list(db.teams.aggregate([{'$group':{'_id':'$story','tweets_count':{'$sum':'$tweets_count'}}}])) #-----------
-#         total = 0
-#         storywise_count = dict()
-#         for story in storywise_tweets_count:
-#             story_name = story['_id']
-#             if(story_name not in storywise_count):
-#                 storywise_count[story_name] = {}
-#             storywise_count[story_name]['no_of_status'] = db.teams.count_documents({'story':story_name})
-#             storywise_count[story_name]['tweets_count'] = story['tweets_count']
-#             total_tweets_story += story['tweets_count']
-#             storywise_count[story_name]['annotated_by_one'] = db.teams.count_documents({'story':story_name,'annotated_by.0':{'$exists':True}})
-#             total_annotated_count['by_one'] += storywise_count[story_name]['annotated_by_one']
-#             total += storywise_count[story_name]['no_of_status'] 
-#         users = list(db.users.find({},{'_id':1}))
-#         userwise_count['assigned_total'] = 0
-#         userwise_count['annotated_total'] = 0
-#         for user in users:
-#             user = user['_id']
-#             if(user not in userwise_count):
-#                 userwise_count[user] = {}
-#             userwise_count[user]['assigned'] = db.teams.count_documents({'assigned_to':user})
-#             userwise_count[user]['annotated'] = db.teams.count_documents({'annotated_by':user})
-#             userwise_count['assigned_total'] += userwise_count[user]['assigned']
-#             userwise_count['annotated_total'] += userwise_count[user]['annotated']
-#             if('tweets_annotated_count' not in userwise_count[user]):
-#                 userwise_count[user]['tweets_annotated_count'] = 0
-#             #storywise_annotated_tweets_count = {}   
-#             for tweet_data in data:
-#                 if(user in tweet_data['annotated_by']):
-#                     userwise_count[user]['tweets_annotated_count'] += len(tweet_data[user].keys())
-#                     total_tweets_annotated += len(tweet_data[user].keys())
-#         return {'storywise_count':storywise_count,'userwise_count':userwise_count,'total_annotated_count':total_annotated_count,'total_status':total, 'total_tweets_story':total_tweets_story,'total_tweets_annotated':total_tweets_annotated}
-#     except Exception as Ex:
-#         print('#'*10)
-#         print(Ex)
-#         print('#'*10)
-#         return Ex
+@app.route('/verified_count', methods=['GET','POST'])
+@cross_origin(origin='*',headers=['Content- Type','Authorization'])
+def count_total_verified_files():
+    """
+    Display the total count of vertification done.
+    """
+    try:
+        if request.method == 'GET':
+            total_count = len(list(db.teams.find({'status': 'verified'})))
+            return make_response(jsonify({'Total Count' : total_count}), 200)
+    except Exception as Ex:
+        print('\n\n*********************************')
+        print(Ex)
+        print('*********************************\n\n')
+        return Response(
+            response=json.dumps({'message': Ex}), status=500, mimetype="application/json")
 
 
 """
 Count the total files yet to be approved
 """
-pass
+@app.route('/pending_count', methods=['GET','POST'])
+@cross_origin(origin='*',headers=['Content- Type','Authorization'])
+def count_total_pending_files():
+    """
+    Display the total count of file yet to be approved.
+    """
+    try:
+        if request.method == 'GET':
+            total_count = len(list(db.teams.find({'status': 'pending'})))
+            return make_response(jsonify({'Total Count' : total_count}), 200)
+    except Exception as Ex:
+        print('\n\n*********************************')
+        print(Ex)
+        print('*********************************\n\n')
+        return Response(
+            response=json.dumps({'message': Ex}), status=500, mimetype="application/json")
+
+
+"""
+Count the total files that are rejected
+"""
+@app.route('/rejected_count', methods=['GET','POST'])
+@cross_origin(origin='*',headers=['Content- Type','Authorization'])
+def count_total_pending_files():
+    """
+    Display the total count of files that are rejected.
+    """
+    try:
+        if request.method == 'GET':
+            total_count = len(list(db.teams.find({'status': 'reject'})))
+            return make_response(jsonify({'Total Count' : total_count}), 200)
+    except Exception as Ex:
+        print('\n\n*********************************')
+        print(Ex)
+        print('*********************************\n\n')
+        return Response(
+            response=json.dumps({'message': Ex}), status=500, mimetype="application/json")
 
 
 """
 Delete a User
 """
-pass
+@app.route('/delete', methods=['GET','POST'])
+@cross_origin(origin='*',headers=['Content- Type','Authorization'])
+def delete_user():
+    """
+    Deletes a particular user.
+    """
+    try:
+        if request.method == 'POST':
+            data = request.get_json()
+            email = data['email']
+            if(email!=''):
+                current_user = len(list(db.users.find({'email': email})))
+                if current_user:
+                    d = db.users.remove({'email':email})
+                    return Response(response=json.dumps({'message': 'User Deleted successfully'}), status=200, mimetype="application/json")
+                else:
+                    return Response(response=json.dumps({'message': 'User Does not exist'}), status=200, mimetype="application/json")
+            else:
+                return Response(response=json.dumps({'message': 'Please enter the email address'}), status=200, mimetype="application/json")
+    except Exception as Ex:
+        print('\n\n*********************************')
+        print(Ex)
+        print('*********************************\n\n')
+        return Response(
+            response=json.dumps({'message': Ex}), status=500, mimetype="application/json")
 
 
 @app.route("/")

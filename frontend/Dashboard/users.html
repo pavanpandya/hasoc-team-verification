@@ -11,6 +11,15 @@
     <!-- Boxicons CDN Link -->
     <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        .pagination li:hover{
+            cursor: pointer;
+        }
+		/* table tbody tr {
+			display: none;
+		} */
+    </style>
+    <!-- <script src="js/admin_users.js"></script> -->
 </head>
 
 <body>
@@ -62,7 +71,7 @@
     <div class="home_content">
         <div class="text">Users</div>
         <div class="board">
-            <table class="table table-hover">
+            <table class="table table-hover" id="user">
                 <thead>
                     <tr>
                         <td>No.</td>
@@ -71,7 +80,7 @@
                         <td>File Verified Count</td>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="user_table">
                     <tr>
                         <td>1</td>
                         <td>Pavan Pandya</td>
@@ -79,42 +88,93 @@
                         <td>20</td>
                     </tr>
                     <tr>
-                        <td>2</td>
-                        <td>Tithi Patel</td>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
                         <td>pavan@gmail.com</td>
                         <td>20</td>
                     </tr>
                     <tr>
-                        <td>3</td>
-                        <td>Shrey Satapara</td>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
                         <td>pavan@gmail.com</td>
                         <td>20</td>
                     </tr>
                     <tr>
-                        <td>4</td>
-                        <td>Hiren Madhu</td>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
                         <td>pavan@gmail.com</td>
                         <td>20</td>
                     </tr>
                     <tr>
-                        <td>5</td>
-                        <td>Dr. Sandip Modha</td>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
                         <td>pavan@gmail.com</td>
                         <td>20</td>
                     </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
+                        <td>pavan@gmail.com</td>
+                        <td>20</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
+                        <td>pavan@gmail.com</td>
+                        <td>20</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
+                        <td>pavan@gmail.com</td>
+                        <td>20</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
+                        <td>pavan@gmail.com</td>
+                        <td>20</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
+                        <td>pavan@gmail.com</td>
+                        <td>20</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Pavan Pandya</td>
+                        <td>pavan@gmail.com</td>
+                        <td>20</td>
+                    </tr>
+                    <!-- <script>
+                        display_users();
+                    </script> -->
                 </tbody>
             </table>
         </div>
+        <!-- Start Pagination -->
+		<div class='pagination-container' >
+                <nav>
+                    <ul class="pagination">
+                        <li data-page="prev" >
+                            <span> < <span class="sr-only">(current)</span></span>
+                        </li>
+                        	<!-- Here the JS Function Will Add the Rows -->
+                        <li data-page="next" id="prev">
+                            <span> > <span class="sr-only">(current)</span></span>
+                        </li>
+                    </ul>
+                </nav>
+		</div>
+        <!-- 		End of Container -->
         <div class="d-flex justify-content-center">
-            <button class="btn-lg p-3 mb-3" id="add_user_btn" onclick="add_user()">
-                ADD MORE USERS
-            </button>
+            <button class="btn-lg p-3 mb-3" id="add_user_btn" onclick="add_user()">ADD MORE USERS</button>
         </div>
         <footer class="sticky-footer">
             <div class="container my-auto">
                 <div class="copyright text-center my-auto">
-                    <span>Copyright ©
-                        <a href="https://hasocfire.github.io/hasoc/2022/index.html" target="_blank">HASOC 2022</a></span>
+                    <span>Copyright ©<a href="https://hasocfire.github.io/hasoc/2022/index.html" target="_blank">HASOC 2022</a></span>
                 </div>
             </div>
         </footer>

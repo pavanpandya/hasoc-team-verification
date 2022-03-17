@@ -289,9 +289,18 @@ body{
   color: #2b2b2b;
 }
 
-.pending p{
+.declined p{
   margin-bottom: 0px;
   background: #fad7d7;
+  padding: 2px 10px;
+  display: inline-block;
+  border-radius: 40px;
+  color: #2b2b2b;
+}
+
+.pending p{
+  margin-bottom: 0px;
+  background: #ffda72;
   padding: 2px 10px;
   display: inline-block;
   border-radius: 40px;

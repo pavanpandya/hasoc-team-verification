@@ -1,3 +1,5 @@
 .git
 backend/__pycache__
+backend/.vscode
+frontend/.vscode
 frontend/Dashboard/HASOC-22 agreement.pdf
